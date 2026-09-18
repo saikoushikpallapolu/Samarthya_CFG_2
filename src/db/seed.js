@@ -140,6 +140,156 @@ export const seedDatabase = async () => {
 
     console.log("✅ Authorities seeded.");
 
+    // 3.1 Seed Jurisdiction Mappings
+    const [jurisdictionSonipat] = await JurisdictionMapping.findOrCreate({
+      where: {
+        categoryId: catWater.id,
+        state: "Haryana",
+        district: "Sonipat",
+      },
+      defaults: {
+        categoryId: catWater.id,
+        state: "Haryana",
+        district: "Sonipat",
+        block: null, // applies to entire district
+        primaryAuthorityId: authSonipat.id,
+      },
+    });
+
+    const [jurisdictionDelhi] = await JurisdictionMapping.findOrCreate({
+      where: {
+        categoryId: catToilet.id,
+        state: "Delhi",
+        district: "North East Delhi",
+      },
+      defaults: {
+        categoryId: catToilet.id,
+        state: "Delhi",
+        district: "North East Delhi",
+        block: null,
+        primaryAuthorityId: authDelhi.id,
+      },
+    });
+
+    console.log("✅ Jurisdiction Mappings seeded.");
+
+    // 3.2 Seed Grievance Templates
+    const [templateWaterHi] = await GrievanceTemplate.findOrCreate({
+      where: {
+        categoryId: catWater.id,
+        language: "hi",
+      },
+      defaults: {
+        categoryId: catWater.id,
+        language: "hi",
+        templateTitle: "पेयजल एवं स्वच्छता सुविधा मरम्मत प्रार्थना पत्र",
+        subjectTemplate:
+          "विषय: {school_name} (UDISE: {udise_code}) में {facility_affected} की तत्काल मरम्मत एवं कार्यशीलता सुनिश्चित करने हेतु।",
+        bodyMarkdownTemplate:
+          "सेवा में,\nश्रीमान अधिशासी अभियंता महोदय,\n{authority_office_name},\n{authority_address}\n\nमहोदय,\n\nसविनय निवेदन है कि हम विद्यालय प्रबंधन समिति (SMC) के सदस्य आपका ध्यान विद्यालय की एक गंभीर समस्या की ओर आकर्षित करना चाहते हैं।\n\nविद्यालय विवरण:\n- विद्यालय: **{school_name}**\n- UDISE कोड: **{udise_code}**\n- ग्राम/वार्ड: **{village}**, ब्लॉक: **{block}**, जिला: **{district}**\n\nसमस्या का विवरण:\n- प्रभावित सुविधा: **{facility_affected}**\n- समस्या की प्रकृति: **{specific_problem}**\n- समस्या की अवधि: **{duration_of_issue}**\n\nउल्लेखनीय है कि निःशुल्क और अनिवार्य बाल शिक्षा का अधिकार अधिनियम (RTE Act, 2009) की अनुसूची के अनुसार प्रत्येक विद्यालय में स्वच्छ पेयजल एवं क्रियाशील प्रसाधन सुविधा प्रदान करना राज्य का संवैधानिक उत्तरदायित्व है।\n\nअतः आपसे करबद्ध निवेदन है कि जनहित एवं बालिकाओं के स्वास्थ्य को ध्यान में रखते हुए इस प्रार्थना पत्र पर त्वरित संज्ञान लेते हुए संबंधित तकनीकी शाखा को निरीक्षण एवं मरम्मत का आदेश जारी करने की कृपा करें।\n\nभवदीय / भवदीया,\nविद्यालय प्रबंधन समिति (SMC)\n{school_name}",
+        requiredVariables: [
+          {
+            key: "facility_affected",
+            label: "प्रभावित सुविधा (जैसे: पीने के पानी की टंकी / नल)",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "specific_problem",
+            label: "समस्या की प्रकृति (जैसे: टंकी टूटी है और पानी नहीं आ रहा)",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "duration_of_issue",
+            label: "समस्या की अवधि (जैसे: 2 महीने)",
+            type: "string",
+            required: true,
+          },
+        ],
+        legalReferences: "Section 19 & Schedule of RTE Act 2009",
+        isActive: true,
+      },
+    });
+
+    const [templateToiletHi] = await GrievanceTemplate.findOrCreate({
+      where: {
+        categoryId: catToilet.id,
+        language: "hi",
+      },
+      defaults: {
+        categoryId: catToilet.id,
+        language: "hi",
+        templateTitle: "बालिका एवं बालक शौचालय मरम्मत प्रार्थना पत्र",
+        subjectTemplate:
+          "विषय: {school_name} (UDISE: {udise_code}) में {facility_affected} की मरम्मत एवं स्वच्छता व्यवस्था हेतु।",
+        bodyMarkdownTemplate:
+          "सेवा में,\nउप शिक्षा निदेशक महोदय,\n{authority_office_name},\n{authority_address}\n\nमहोदय,\n\nविद्यालय **{school_name}** (UDISE: **{udise_code}**) में {facility_affected} की हालत अत्यंत जर्जर है।\n\nसमस्या विवरण:\n- समस्या: **{specific_problem}**\n- अवधि: **{duration_of_issue}**\n\nRTE Act 2009 के मानदण्डों के तहत तुरंत कार्रवाई की जाए।\n\nभवदीय,\nSMC समिति\n{school_name}",
+        requiredVariables: [
+          {
+            key: "facility_affected",
+            label: "प्रभावित सुविधा (जैसे: शौचालय फ्लश)",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "specific_problem",
+            label: "समस्या क्या है",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "duration_of_issue",
+            label: "समस्या कितने समय से है",
+            type: "string",
+            required: true,
+          },
+        ],
+        legalReferences: "RTE Act 2009 Norms for Separate Sanitation",
+        isActive: true,
+      },
+    });
+
+    const [templateBuildingHi] = await GrievanceTemplate.findOrCreate({
+      where: {
+        categoryId: catBuilding.id,
+        language: "hi",
+      },
+      defaults: {
+        categoryId: catBuilding.id,
+        language: "hi",
+        templateTitle: "भवन एवं चारदीवारी निर्माण प्रार्थना पत्र",
+        subjectTemplate:
+          "विषय: {school_name} (UDISE: {udise_code}) में {facility_affected} के तत्काल पुनर्निर्माण एवं सुरक्षा हेतु।",
+        bodyMarkdownTemplate:
+          "सेवा में,\nकार्यपालक अभियंता महोदय (PWD),\n{authority_office_name},\n{authority_address}\n\nमहोदय,\n\nविद्यालय **{school_name}** में {facility_affected} क्षतिग्रस्त होने से बच्चों की सुरक्षा को खतरा उत्पन्न हो गया है।\n\nसमस्या विवरण:\n- समस्या: **{specific_problem}**\n- अवधि: **{duration_of_issue}**\n\nकृपया शीघ्र मरम्मत कार्य प्रारंभ करवाएं।\n\nभवदीय,\nSMC समिति\n{school_name}",
+        requiredVariables: [
+          {
+            key: "facility_affected",
+            label: "प्रभावित ढांचा (जैसे: चारदीवारी)",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "specific_problem",
+            label: "समस्या का विवरण",
+            type: "string",
+            required: true,
+          },
+          {
+            key: "duration_of_issue",
+            label: "अवधि",
+            type: "string",
+            required: true,
+          },
+        ],
+        legalReferences: "RTE Act 2009 Safety Norms",
+        isActive: true,
+      },
+    });
+
+    console.log("✅ Templates seeded.");
+
     // 4. Seed Schools with realistic coordinates
     const [school1] = await School.findOrCreate({
       where: { udiseCode: "06080100101" },
