@@ -11,7 +11,9 @@
     "db:seed": "node -r dotenv/config --experimental-json-modules src/db/seed.js",
     "test:member1": "node -r dotenv/config --experimental-json-modules src/tests/testMember1Complete.js",
     "test:member2": "node -r dotenv/config --experimental-json-modules src/tests/testMember2Complete.js",
-    "test:all": "node -r dotenv/config --experimental-json-modules src/tests/testCompleteUnified.js"
+    "test:all": "node -r dotenv/config --experimental-json-modules src/tests/testCompleteUnified.js",
+    "frontend:dev": "npm --prefix free-react-tailwind-admin-dashboard-main run dev",
+    "frontend:build": "npm --prefix free-react-tailwind-admin-dashboard-main run build"
   },
   "keywords": [
     "samarthya",
