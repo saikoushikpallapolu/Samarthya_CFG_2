@@ -11,20 +11,21 @@
 
 ## Table of Contents
 1. [Architecture & Design Principles](#1-architecture--design-principles)
-2. [Authentication, Authorization & Headers](#2-authentication-authorization--headers)
-3. [Global Response & Error Envelope Specification](#3-global-response--error-envelope-specification)
-4. [TypeScript Interfaces for Frontend Integration](#4-typescript-interfaces-for-frontend-integration)
-5. [Module 1: Authentication & User Profile APIs](#5-module-1-authentication--user-profile-apis)
-6. [Module 2: School Discovery & Citizen Location Search APIs](#6-module-2-school-discovery--citizen-location-search-apis)
-7. [Module 3: Master Data & Department Directory APIs](#7-module-3-master-data--department-directory-apis)
-8. [Module 4: Speech-to-Text & Template Engine APIs](#8-module-4-speech-to-text--template-engine-apis)
-9. [Module 5: Grievance Lifecycle (Filing, Tracking & Ground Verification)](#9-module-5-grievance-lifecycle-filing-tracking--ground-verification)
-10. [Module 6: Government Authority 1-Click Action APIs (Magic Link)](#10-module-6-government-authority-1-click-action-apis-magic-link)
-11. [Module 7: Automated SLA Tracking & Escalation APIs](#11-module-7-automated-sla-tracking--escalation-apis)
-12. [Module 8: Public Transparency Portal & Citizen Upvoting APIs](#12-module-8-public-transparency-portal--citizen-upvoting-apis)
-13. [Module 9: Social Media Advocacy Generator APIs](#13-module-9-social-media-advocacy-generator-apis)
-14. [Module 10: Samarthya Admin & Macro Decision-Making APIs](#14-module-10-samarthya-admin--macro-decision-making-apis)
-15. [Error Code Reference Directory](#15-error-code-reference-directory)
+2. [Team Division & Zero-Conflict Git Architecture (Member 1 vs Member 2)](#2-team-division--zero-conflict-git-architecture-member-1-vs-member-2)
+3. [Authentication, Authorization & Headers](#3-authentication-authorization--headers)
+4. [Global Response & Error Envelope Specification](#4-global-response--error-envelope-specification)
+5. [TypeScript Interfaces for Frontend Integration](#5-typescript-interfaces-for-frontend-integration)
+6. [Module 1: Authentication & User Profile APIs [MEMBER 1]](#6-module-1-authentication--user-profile-apis-member-1)
+7. [Module 2: School Discovery & Citizen Location Search APIs [MEMBER 1]](#7-module-2-school-discovery--citizen-location-search-apis-member-1)
+8. [Module 3: Master Data & Department Directory APIs [MEMBER 2]](#8-module-3-master-data--department-directory-apis-member-2)
+9. [Module 4: Speech-to-Text & Template Engine APIs [MEMBER 2]](#9-module-4-speech-to-text--template-engine-apis-member-2)
+10. [Module 5: Grievance Lifecycle (Filing, Tracking & Ground Verification) [MEMBER 2]](#10-module-5-grievance-lifecycle-filing-tracking--ground-verification-member-2)
+11. [Module 6: Government Authority 1-Click Action APIs (Magic Link) [MEMBER 2]](#11-module-6-government-authority-1-click-action-apis-magic-link-member-2)
+12. [Module 7: Automated SLA Tracking & Escalation APIs [MEMBER 2]](#12-module-7-automated-sla-tracking--escalation-apis-member-2)
+13. [Module 8: Public Transparency Portal & Citizen Upvoting APIs [MEMBER 1]](#13-module-8-public-transparency-portal--citizen-upvoting-apis-member-1)
+14. [Module 9: Social Media Advocacy Generator APIs [MEMBER 1]](#14-module-9-social-media-advocacy-generator-apis-member-1)
+15. [Module 10: Samarthya Admin & Macro Decision-Making APIs [MEMBER 2]](#15-module-10-samarthya-admin--macro-decision-making-apis-member-2)
+16. [Error Code Reference Directory](#16-error-code-reference-directory)
 
 ---
 
@@ -43,7 +44,71 @@
 
 ---
 
-## 2. Authentication, Authorization & Headers
+## 2. Team Division & Zero-Conflict Git Architecture (Member 1 vs Member 2)
+
+To ensure rapid, parallel development with **zero git merge conflicts**, the backend architecture is cleanly divided into two independent, non-overlapping domains:
+
+```
++--------------------------------------------------------------------------------------------------------+
+|                                  SAMARTHYA BACKEND APPLICATION (app.js)                                |
+|                              [FROZEN: Pre-mounted with all 10 Route Routers]                            |
++--------------------------------------------------------------------------------------------------------+
+                                                    |
+               +------------------------------------+------------------------------------+
+               |                                                                         |
+               v                                                                         v
++----------------------------------------------+          +----------------------------------------------+
+|               MEMBER 1 DOMAIN                |          |               MEMBER 2 DOMAIN                |
+|  (User Access, Schools & Public Advocacy)    |          |  (Core Grievance Engine, Voice & Authority)  |
++----------------------------------------------+          +----------------------------------------------+
+| 📂 Routes Owned:                             |          | 📂 Routes Owned:                             |
+|  - src/routes/auth.routes.js                 |          |  - src/routes/masterData.routes.js           |
+|  - src/routes/school.routes.js               |          |  - src/routes/voice.routes.js                |
+|  - src/routes/public.routes.js               |          |  - src/routes/template.routes.js             |
+|  - src/routes/social.routes.js               |          |  - src/routes/grievance.routes.js            |
+|                                              |          |  - src/routes/authority.routes.js            |
+| 📂 Controllers Owned:                        |          |  - src/routes/admin.routes.js                |
+|  - src/controllers/auth.controller.js        |          |                                              |
+|  - src/controllers/school.controller.js      |          | 📂 Controllers Owned:                        |
+|  - src/controllers/public.controller.js      |          |  - src/controllers/masterData.controller.js  |
+|  - src/controllers/social.controller.js      |          |  - src/controllers/voice.controller.js       |
+|                                              |          |  - src/controllers/template.controller.js    |
+| 📦 Models Utilized:                          |          |  - src/controllers/grievance.controller.js   |
+|  User, School, SmcMember,                    |          |  - src/controllers/authority.controller.js   |
+|  GrievanceUpvote, SocialMediaCampaign        |          |  - src/controllers/admin.controller.js       |
+|                                              |          |                                              |
+| 🚀 Modules:                                  |          | 📦 Models Utilized:                          |
+|  Module 1: Auth & User Profile               |          |  Department, GovernmentAuthority, Category,  |
+|  Module 2: School Search & GPS Nearby        |          |  JurisdictionMapping, Template, Grievance,   |
+|  Module 8: Public Transparency & Upvotes     |          |  Attachments, TimelineEvents, Reminders      |
+|  Module 9: Social Media Campaign Generator   |          |                                              |
+|                                              |          | 🚀 Modules:                                  |
+|                                              |          |  Module 3: Master Directory & Authorities    |
+|                                              |          |  Module 4: Speech-to-Text & Letter Templates |
+|                                              |          |  Module 5: Grievance Lifecycle & Physical Ack|
+|                                              |          |  Module 6: Authority 1-Click Magic Link      |
+|                                              |          |  Module 7: Automated SLA Escalations         |
+|                                              |          |  Module 10: Admin Bottleneck Analytics       |
++----------------------------------------------+          +----------------------------------------------+
+```
+
+### 2.1 The Zero-Conflict Rules of Engagement
+1. **`src/app.js` is Frozen**: All route modules have already been imported and mounted in `src/app.js`. Neither developer ever needs to edit `src/app.js`.
+2. **Strict File Ownership**:
+   - Member 1 only creates and modifies files in their own route/controller list.
+   - Member 2 only creates and modifies files in their own route/controller list.
+   - When merging git branches or creating Pull Requests, git will see **different files being edited in parallel**—resulting in **0 merge conflicts**.
+3. **Shared Models & DB Are Ready**:
+   - All 14 Sequelize models and associations are already synchronized with the Neon PostgreSQL database. Both members simply import the models they need:
+     ```javascript
+     import { User, School, Grievance, GovernmentAuthority } from "../models/index.js";
+     ```
+4. **Shared Utilities**:
+   - `asyncHandler`, `ApiResponse`, and `ApiError` are located in `src/utils/` and can be used directly without modification.
+
+---
+
+## 3. Authentication, Authorization & Headers
 
 ### 2.1 Authentication Types
 1. **Bearer JWT Token**:
@@ -67,7 +132,7 @@ Accept-Language: hi
 
 ---
 
-## 3. Global Response & Error Envelope Specification
+## 4. Global Response & Error Envelope Specification
 
 Every API response adheres strictly to the backend `ApiResponse` and `ApiError` class contracts.
 
@@ -99,7 +164,7 @@ Every API response adheres strictly to the backend `ApiResponse` and `ApiError` 
 
 ---
 
-## 4. TypeScript Interfaces for Frontend Integration
+## 5. TypeScript Interfaces for Frontend Integration
 
 Frontend teams can copy these types directly into their codebase (`src/types/api.ts`):
 
@@ -180,7 +245,12 @@ export interface SchoolItem {
 
 ---
 
-## 5. Module 1: Authentication & User Profile APIs
+## 6. Module 1: Authentication & User Profile APIs [MEMBER 1]
+
+> **Assigned Developer**: **Member 1**  
+> **Routes File**: `src/routes/auth.routes.js` (Mounted at `/api/v1/auth`)  
+> **Controller File**: `src/controllers/auth.controller.js`  
+> **Models Used**: `User`, `SmcMember`, `School`
 
 ### 5.1 `POST /auth/request-otp`
 Sends a 6-digit OTP via SMS to the user's mobile number for passwordless authentication.
@@ -375,7 +445,12 @@ Logs out user and invalidates refresh token.
 
 ---
 
-## 6. Module 2: School Discovery & Citizen Location Search APIs
+## 7. Module 2: School Discovery & Citizen Location Search APIs [MEMBER 1]
+
+> **Assigned Developer**: **Member 1**  
+> **Routes File**: `src/routes/school.routes.js` (Mounted at `/api/v1/schools`)  
+> **Controller File**: `src/controllers/school.controller.js`  
+> **Models Used**: `School`, `SmcMember`, `User`
 
 ### 6.1 `GET /schools/search`
 Search schools across India by UDISE code, school name, district, or PIN code.
@@ -534,7 +609,12 @@ Allows an authenticated user (parent, teacher, headmaster) to join a school's Sc
 
 ---
 
-## 7. Module 3: Master Data & Department Directory APIs
+## 8. Module 3: Master Data & Department Directory APIs [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes File**: `src/routes/masterData.routes.js` (Mounted at `/api/v1`)  
+> **Controller File**: `src/controllers/masterData.controller.js`  
+> **Models Used**: `GrievanceCategory`, `Department`, `GovernmentAuthority`, `JurisdictionMapping`
 
 ### 7.1 `GET /categories`
 Lists all supported grievance categories, default SLAs, and icons with multilingual titles.
@@ -644,7 +724,12 @@ Search the official government authorities directory by geography and department
 
 ---
 
-## 8. Module 4: Speech-to-Text & Template Engine APIs
+## 9. Module 4: Speech-to-Text & Template Engine APIs [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes Files**: `src/routes/voice.routes.js` (`/api/v1/voice`) & `src/routes/template.routes.js` (`/api/v1/templates`)  
+> **Controller Files**: `src/controllers/voice.controller.js` & `src/controllers/template.controller.js`  
+> **Models Used**: `GrievanceTemplate`, `GrievanceCategory`, `School`, `GovernmentAuthority`
 
 ### 8.1 `POST /voice/process-audio`
 Uploads a voice recording recorded by an SMC member. The backend runs the audio through a regional Speech-to-Text pipeline (Hindi/Punjabi/English Whisper/Bhashini), extracts key grievance entities, and maps them to form variables.
@@ -778,7 +863,12 @@ Previews the rendered markdown and letterhead text by injecting the school detai
 
 ---
 
-## 9. Module 5: Grievance Lifecycle (Filing, Tracking & Ground Verification)
+## 10. Module 5: Grievance Lifecycle (Filing, Tracking & Ground Verification) [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes File**: `src/routes/grievance.routes.js` (Mounted at `/api/v1/grievances`)  
+> **Controller File**: `src/controllers/grievance.controller.js`  
+> **Models Used**: `Grievance`, `GrievanceAttachment`, `GrievanceTimelineEvent`, `School`, `GovernmentAuthority`, `User`
 
 ### 9.1 `POST /grievances`
 Creates and files an official grievance. Automatically:
@@ -1045,7 +1135,12 @@ Reopens an issue if the government official marked it as resolved, but inspectio
 
 ---
 
-## 10. Module 6: Government Authority 1-Click Action APIs (Magic Link)
+## 11. Module 6: Government Authority 1-Click Action APIs (Magic Link) [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes File**: `src/routes/authority.routes.js` (Mounted at `/api/v1/authority`)  
+> **Controller File**: `src/controllers/authority.controller.js`  
+> **Models Used**: `Grievance`, `GovernmentAuthority`, `Department`, `GrievanceTimelineEvent`
 
 ### 10.1 `GET /authority/grievances/:actionToken`
 Direct access view for government officers via the signed magic link sent to their email or WhatsApp. No login required.
@@ -1163,7 +1258,12 @@ If a grievance is incorrectly routed or requires another department (e.g., elect
 
 ---
 
-## 11. Module 7: Automated SLA Tracking & Escalation APIs
+## 12. Module 7: Automated SLA Tracking & Escalation APIs [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes Files**: `src/routes/grievance.routes.js` & `src/routes/admin.routes.js`  
+> **Controller Files**: `src/controllers/grievance.controller.js` & `src/controllers/admin.controller.js`  
+> **Models Used**: `Grievance`, `GrievanceReminder`, `GovernmentAuthority`, `GrievanceTimelineEvent`
 
 ### 11.1 `GET /grievances/:id/sla-status`
 Checks the live SLA countdown, breach status, and automated escalation tier.
@@ -1228,7 +1328,12 @@ Manually triggers an escalation to Level 2 (District Magistrate) or Level 3 (Sta
 
 ---
 
-## 12. Module 8: Public Transparency Portal & Citizen Upvoting APIs
+## 13. Module 8: Public Transparency Portal & Citizen Upvoting APIs [MEMBER 1]
+
+> **Assigned Developer**: **Member 1**  
+> **Routes File**: `src/routes/public.routes.js` (Mounted at `/api/v1/public`)  
+> **Controller File**: `src/controllers/public.controller.js`  
+> **Models Used**: `School`, `Grievance`, `GrievanceUpvote`, `GrievanceCategory`
 
 ### 12.1 `GET /public/dashboard-stats`
 Macro-level aggregate statistics across all schools for the citizen transparency landing page.
@@ -1341,7 +1446,12 @@ Allows local community citizens to upvote a grievance to show community concern 
 
 ---
 
-## 13. Module 9: Social Media Advocacy Generator APIs
+## 14. Module 9: Social Media Advocacy Generator APIs [MEMBER 1]
+
+> **Assigned Developer**: **Member 1**  
+> **Routes File**: `src/routes/social.routes.js` (Mounted at `/api/v1/social`)  
+> **Controller File**: `src/controllers/social.controller.js`  
+> **Models Used**: `SocialMediaCampaign`, `Grievance`, `School`, `GovernmentAuthority`
 
 ### 13.1 `POST /social/generate-post/:grievanceId`
 Generates pre-formatted advocacy posts for Twitter/X, Facebook, and WhatsApp targeting the exact MLAs, Ministers, and department handles responsible for an overdue or hanged grievance.
@@ -1377,7 +1487,12 @@ Generates pre-formatted advocacy posts for Twitter/X, Facebook, and WhatsApp tar
 
 ---
 
-## 14. Module 10: Samarthya Admin & Macro Decision-Making APIs
+## 15. Module 10: Samarthya Admin & Macro Decision-Making APIs [MEMBER 2]
+
+> **Assigned Developer**: **Member 2**  
+> **Routes File**: `src/routes/admin.routes.js` (Mounted at `/api/v1/admin`)  
+> **Controller File**: `src/controllers/admin.controller.js`  
+> **Models Used**: `Grievance`, `Department`, `School`, `GovernmentAuthority`
 
 ### 14.1 `GET /admin/analytics/bottlenecks`
 Identifies the worst-performing departments, districts, and systemic delays across the 19,000+ school network.
@@ -1463,7 +1578,7 @@ Exports a comprehensive CSV/Excel dataset of grievances for meetings with govern
 
 ---
 
-## 15. Error Code Reference Directory
+## 16. Error Code Reference Directory
 
 | HTTP Status | Error Code String | Description | Action for Frontend UI |
 |:---:|:---|:---|:---|
