@@ -45,7 +45,7 @@ SocialMediaCampaign.init(
       defaultValue: [], // e.g. ['@EduMinOfIndia', '@DirectorateEdu', '@DchryGov']
     },
     shareUrl: {
-      type: DataTypes.STRING(1000),
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     clicksCount: {
