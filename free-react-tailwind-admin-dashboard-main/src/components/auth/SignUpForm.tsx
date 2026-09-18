@@ -10,10 +10,11 @@ import type { UserRole } from "@/types/samarthya";
 
 export default function SignUpForm() {
   const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("+91 ");
+  const [phoneNumber, setPhoneNumber] = useState("+91 98123 45678");
   const [selectedRole, setSelectedRole] = useState<UserRole>("SMC_MEMBER");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const { loginWithOtp } = useAuth();
@@ -22,10 +23,13 @@ export default function SignUpForm() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
     try {
       const res = await apiRequestOtp(phoneNumber);
       setOtpSent(true);
       setOtp(res.testOtp);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to send OTP. Please check your phone number.");
     } finally {
       setIsLoading(false);
     }
@@ -34,12 +38,15 @@ export default function SignUpForm() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage("");
     try {
       await loginWithOtp(phoneNumber, otp || "459123", selectedRole, fullName);
       if (selectedRole === "SMC_MEMBER") navigate("/dashboard/smc");
       else if (selectedRole === "CITIZEN") navigate("/dashboard/citizen");
       else if (selectedRole === "GOVERNMENT_OFFICER") navigate("/dashboard/authority");
       else navigate("/dashboard/admin");
+    } catch (err: any) {
+      setErrorMessage(err.message || "OTP verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +77,12 @@ export default function SignUpForm() {
               Join your local School Management Committee (SMC) or register as a concerned citizen
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="mb-4 rounded-xl border border-error-200 bg-error-50 p-3 text-xs font-medium text-error-700 dark:border-error-900 dark:bg-error-950/20 dark:text-error-400">
+              ⚠️ {errorMessage}
+            </div>
+          )}
 
           {!otpSent ? (
             <form onSubmit={handleSendOtp} className="space-y-4">
@@ -115,33 +128,46 @@ export default function SignUpForm() {
             </form>
           ) : (
             <form onSubmit={handleVerify} className="space-y-4">
-              <div className="rounded-xl bg-brand-50 p-3 text-xs text-brand-900 dark:bg-brand-950/20 dark:text-brand-300">
+              <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-xs text-brand-900 dark:border-brand-900 dark:bg-brand-950/20 dark:text-brand-300">
                 OTP sent to {phoneNumber}. Enter code below to confirm registration.
               </div>
 
               <div>
-                <Label>Enter 6-Digit OTP</Label>
+                <Label>6-Digit Verification Code</Label>
                 <Input
+                  required
                   type="text"
                   placeholder="459123"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                 />
                 <p className="mt-1 text-[11px] text-gray-400">
-                  Universal Demo OTP: <strong className="text-brand-600">459123</strong>
+                  Universal Test OTP: <strong className="text-brand-600">459123</strong>
                 </p>
               </div>
 
-              <Button disabled={isLoading} className="w-full" size="sm">
-                {isLoading ? "Completing Registration..." : "Confirm & Open Dashboard"}
-              </Button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setErrorMessage("");
+                  }}
+                  className="rounded-xl border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Back
+                </button>
+                <Button disabled={isLoading} className="flex-1" size="sm">
+                  {isLoading ? "Registering..." : "Confirm & Enter Dashboard"}
+                </Button>
+              </div>
             </form>
           )}
 
           <div className="mt-5 text-center text-xs text-gray-500">
-            Already registered?{" "}
-            <Link to="/signin" className="font-semibold text-brand-600 hover:underline">
-              Sign In with OTP
+            Already have an account?{" "}
+            <Link to="/signin" className="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+              Sign In
             </Link>
           </div>
         </div>

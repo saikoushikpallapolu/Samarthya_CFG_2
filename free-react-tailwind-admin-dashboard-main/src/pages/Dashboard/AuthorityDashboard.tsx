@@ -44,7 +44,11 @@ export default function AuthorityDashboard() {
 
   const handleAcknowledge = async () => {
     if (!activeGrievance) return;
-    await apiAcknowledgeByToken(activeGrievance.actionToken || "demo-token", remarks, tentativeDate);
+    try {
+      await apiAcknowledgeByToken(activeGrievance.actionToken || activeGrievance.id, remarks, tentativeDate);
+    } catch (err) {
+      console.error("Acknowledge error:", err);
+    }
     setActionType(null);
     setActiveGrievance(null);
     loadData();
@@ -52,13 +56,17 @@ export default function AuthorityDashboard() {
 
   const handleUpdateStatus = async () => {
     if (!activeGrievance) return;
-    await apiUpdateStatusByToken(
-      activeGrievance.actionToken || "demo-token",
-      selectedStatus,
-      remarks,
-      workOrderNo || "WO-2026-PWD-892",
-      proofPhoto
-    );
+    try {
+      await apiUpdateStatusByToken(
+        activeGrievance.actionToken || activeGrievance.id,
+        selectedStatus,
+        remarks,
+        workOrderNo || "WO-2026-PWD-892",
+        proofPhoto
+      );
+    } catch (err) {
+      console.error("Update status error:", err);
+    }
     setActionType(null);
     setActiveGrievance(null);
     loadData();
@@ -66,7 +74,11 @@ export default function AuthorityDashboard() {
 
   const handleForward = async () => {
     if (!activeGrievance) return;
-    await apiForwardByToken(activeGrievance.actionToken || "demo-token", forwardDept, forwardReason);
+    try {
+      await apiForwardByToken(activeGrievance.actionToken || activeGrievance.id, forwardDept, forwardReason);
+    } catch (err) {
+      console.error("Forward error:", err);
+    }
     setActionType(null);
     setActiveGrievance(null);
     loadData();

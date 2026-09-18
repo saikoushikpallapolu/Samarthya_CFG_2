@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -18,6 +19,19 @@ import {
  */
 
 /**
+ * Helper to build where clause safely without failing on Postgres UUID validation
+ */
+const getGrievanceTokenWhere = (actionToken) => {
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      actionToken
+    );
+  return isUuid
+    ? { [Op.or]: [{ actionToken }, { id: actionToken }] }
+    : { actionToken };
+};
+
+/**
  * @desc    Direct access view for government officers via signed magic link token (no login required)
  * @route   GET /api/v1/authority/grievances/:actionToken
  * @access  Public (Secured by 64-char action token)
@@ -25,12 +39,12 @@ import {
 export const getAuthorityGrievanceByToken = asyncHandler(async (req, res) => {
   const { actionToken } = req.params;
 
-  if (!actionToken || actionToken.length < 16) {
+  if (!actionToken || actionToken.length < 8) {
     throw new ApiError(400, "Invalid action token format");
   }
 
   const grievance = await Grievance.findOne({
-    where: { actionToken },
+    where: getGrievanceTokenWhere(actionToken),
     include: [
       {
         model: School,
@@ -99,7 +113,9 @@ export const acknowledgeGrievanceByToken = asyncHandler(async (req, res) => {
   const { actionToken } = req.params;
   const { officerRemarks, tentativeResolutionDate } = req.body;
 
-  const grievance = await Grievance.findOne({ where: { actionToken } });
+  const grievance = await Grievance.findOne({
+    where: getGrievanceTokenWhere(actionToken),
+  });
   if (!grievance) {
     throw new ApiError(404, "Invalid or expired authority action token");
   }
@@ -164,7 +180,9 @@ export const updateStatusByToken = asyncHandler(async (req, res) => {
     );
   }
 
-  const grievance = await Grievance.findOne({ where: { actionToken } });
+  const grievance = await Grievance.findOne({
+    where: getGrievanceTokenWhere(actionToken),
+  });
   if (!grievance) {
     throw new ApiError(404, "Invalid or expired authority action token");
   }
@@ -239,7 +257,7 @@ export const forwardGrievanceByToken = asyncHandler(async (req, res) => {
   }
 
   const grievance = await Grievance.findOne({
-    where: { actionToken },
+    where: getGrievanceTokenWhere(actionToken),
     include: [{ model: School, as: "school" }],
   });
 

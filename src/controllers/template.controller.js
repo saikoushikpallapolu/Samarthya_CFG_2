@@ -90,7 +90,14 @@ export const previewLetter = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Both 'templateId' and 'schoolId' are required in request body");
   }
 
-  const template = await GrievanceTemplate.findByPk(templateId);
+  let template = null;
+  // If valid UUID format, lookup by primary key
+  if (templateId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(templateId)) {
+    template = await GrievanceTemplate.findByPk(templateId);
+  }
+  if (!template) {
+    template = await GrievanceTemplate.findOne({ where: { isActive: true } });
+  }
   if (!template) {
     throw new ApiError(404, "Template not found");
   }

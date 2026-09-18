@@ -1,8 +1,22 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { apiUpdateLanguage } from "@/services/api";
 
-export type LanguageCode = "en" | "ar" | "es" | "de";
+export type LanguageCode =
+  | "hi"
+  | "en"
+  | "pa"
+  | "bn"
+  | "mr"
+  | "te"
+  | "ta"
+  | "gu"
+  | "kn"
+  | "or"
+  | "ar"
+  | "es"
+  | "de";
 
 export type Language = {
   code: LanguageCode;
@@ -12,10 +26,16 @@ export type Language = {
 };
 
 export const AVAILABLE_LANGUAGES: Language[] = [
-  { code: "en", name: "English", dir: "ltr" },
-  { code: "ar", name: "العربية", dir: "rtl" },
-  { code: "es", name: "Español", dir: "ltr" },
-  { code: "de", name: "Deutsch", dir: "ltr" },
+  { code: "hi", name: "हिन्दी (Hindi)", dir: "ltr", flag: "🇮🇳" },
+  { code: "en", name: "English", dir: "ltr", flag: "🇬🇧" },
+  { code: "pa", name: "ਪੰਜਾਬੀ (Punjabi)", dir: "ltr", flag: "🇮🇳" },
+  { code: "bn", name: "বাংলা (Bengali)", dir: "ltr", flag: "🇮🇳" },
+  { code: "mr", name: "मराठी (Marathi)", dir: "ltr", flag: "🇮🇳" },
+  { code: "te", name: "తెలుగు (Telugu)", dir: "ltr", flag: "🇮🇳" },
+  { code: "ta", name: "தமிழ் (Tamil)", dir: "ltr", flag: "🇮🇳" },
+  { code: "gu", name: "ગુજરાતી (Gujarati)", dir: "ltr", flag: "🇮🇳" },
+  { code: "kn", name: "ಕನ್ನಡ (Kannada)", dir: "ltr", flag: "🇮🇳" },
+  { code: "or", name: "ଓଡ଼ିଆ (Odia)", dir: "ltr", flag: "🇮🇳" },
 ];
 
 type LanguageContextType = {
@@ -33,10 +53,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { i18n } = useTranslation();
   const [language, setLanguageState] = useState<LanguageCode>(() => {
-    const currentLng = (i18n.resolvedLanguage || i18n.language || "en") as LanguageCode;
+    const currentLng = (i18n.resolvedLanguage || i18n.language || "hi") as LanguageCode;
     return AVAILABLE_LANGUAGES.some((lang) => lang.code === currentLng)
       ? currentLng
-      : "en";
+      : "hi";
   });
 
   const currentLanguage =
@@ -68,6 +88,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   const setLanguage = (code: LanguageCode) => {
     i18n.changeLanguage(code);
     setLanguageState(code);
+    if (["en", "hi", "pa"].includes(code)) {
+      apiUpdateLanguage(code as any).catch(() => {});
+    }
   };
 
   return (

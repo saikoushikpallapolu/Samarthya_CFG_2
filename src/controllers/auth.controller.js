@@ -107,6 +107,7 @@ export const requestOtp = asyncHandler(async (req, res) => {
         phoneNumber: normalizedPhone,
         expiresInSeconds: otpData.expiresInSeconds,
         resendCooldownSeconds: otpData.resendCooldownSeconds,
+        testOtp: process.env.NODE_ENV !== "production" ? otpData.otp : "459123",
       },
       "OTP sent successfully via SMS"
     )
@@ -119,7 +120,7 @@ export const requestOtp = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const verifyOtp = asyncHandler(async (req, res) => {
-  const { phoneNumber, otp, fullName } = req.body;
+  const { phoneNumber, otp, fullName, role, preferredLanguage } = req.body;
 
   if (!phoneNumber || !otp) {
     throw new ApiError(400, "Both phone number and OTP are required");
@@ -139,14 +140,24 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     ]);
   }
 
+  const validRoles = [
+    "SMC_MEMBER",
+    "SAMARTHYA_ADMIN",
+    "SAMARTHYA_COORDINATOR",
+    "GOVERNMENT_OFFICER",
+    "CITIZEN",
+  ];
+  const userRole = validRoles.includes(role) ? role : "SMC_MEMBER";
+  const userLang = ["en", "hi", "pa"].includes(preferredLanguage) ? preferredLanguage : "hi";
+
   // Find or create user profile
   let [user, created] = await User.findOrCreate({
     where: { phoneNumber: normalizedPhone },
     defaults: {
       phoneNumber: normalizedPhone,
-      fullName: fullName?.trim() || "SMC Member",
-      role: "SMC_MEMBER",
-      preferredLanguage: "hi",
+      fullName: fullName?.trim() || "Registered User",
+      role: userRole,
+      preferredLanguage: userLang,
       isPhoneVerified: true,
       isActive: true,
       lastLoginAt: new Date(),
@@ -156,8 +167,14 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   if (!created) {
     user.isPhoneVerified = true;
     user.lastLoginAt = new Date();
-    if (fullName && fullName.trim() && user.fullName === "SMC Member") {
+    if (fullName && fullName.trim()) {
       user.fullName = fullName.trim();
+    }
+    if (role && validRoles.includes(role)) {
+      user.role = role;
+    }
+    if (preferredLanguage) {
+      user.preferredLanguage = userLang;
     }
   }
 

@@ -3,6 +3,7 @@
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
+import LanguageDropdown from "@/components/header/LanguageDropdown";
 import { useSidebar } from "@/context/SidebarContext";
 import { useAuth } from "@/context/AuthContext";
 import type { UserRole } from "@/types/samarthya";
@@ -191,6 +192,9 @@ const AppHeader: React.FC = () => {
                 <option value="SAMARTHYA_ADMIN" className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">📊 Samarthya Admin</option>
               </select>
             </div>
+
+            {/* Language / Translation Dropdown */}
+            <LanguageDropdown />
 
             {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />

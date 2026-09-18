@@ -15,6 +15,7 @@ const router = Router();
  */
 
 router.route("/:categoryId").get(verifyJWT, getTemplateByCategory);
+router.route("/category/:categoryId").get(verifyJWT, getTemplateByCategory);
 router.route("/preview-letter").post(verifyJWT, previewLetter);
 
 export default router;

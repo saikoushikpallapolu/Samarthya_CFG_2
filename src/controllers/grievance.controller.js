@@ -97,30 +97,37 @@ export const submitGrievance = asyncHandler(async (req, res) => {
   let subject = `विषय: ${school.schoolName} (UDISE: ${school.udiseCode}) में ${dynamicFieldValues.facility_affected || category.categoryName} की तत्काल मरम्मत हेतु।`;
   let formalLetterContent = `सेवा में,\nश्रीमान सक्षम अधिकारी महोदय,\n${assignedAuthority?.officeName || "संबंधित विभाग"}\n\nविद्यालय: ${school.schoolName}\nसमस्या: ${dynamicFieldValues.specific_problem || "सुविधा में खराबी"}\nअवधि: ${dynamicFieldValues.duration_of_issue || "अज्ञात"}\n\nविद्यालय प्रबंधन समिति (SMC)`;
 
-  if (templateId) {
-    const template = await GrievanceTemplate.findByPk(templateId);
-    if (template) {
-      const vars = {
-        school_name: school.schoolName,
-        udise_code: school.udiseCode,
-        state: school.state,
-        district: school.district,
-        block: school.block || "",
-        village: school.villageOrWard || "",
-        authority_office_name: assignedAuthority?.officeName || "",
-        authority_address: assignedAuthority?.officeAddress || "",
-        ...dynamicFieldValues,
-      };
-      let s = template.subjectTemplate;
-      let b = template.bodyMarkdownTemplate;
-      for (const [k, v] of Object.entries(vars)) {
-        const reg = new RegExp(`\\{${k}\\}`, "g");
-        s = s.replace(reg, v ?? "");
-        b = b.replace(reg, v ?? "");
-      }
-      subject = s;
-      formalLetterContent = b;
+  let activeTemplate = null;
+  if (templateId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(templateId)) {
+    activeTemplate = await GrievanceTemplate.findByPk(templateId);
+  }
+  if (!activeTemplate) {
+    activeTemplate = await GrievanceTemplate.findOne({
+      where: { categoryId: category.id, isActive: true },
+    });
+  }
+
+  if (activeTemplate) {
+    const vars = {
+      school_name: school.schoolName,
+      udise_code: school.udiseCode,
+      state: school.state,
+      district: school.district,
+      block: school.block || "",
+      village: school.villageOrWard || "",
+      authority_office_name: assignedAuthority?.officeName || "",
+      authority_address: assignedAuthority?.officeAddress || "",
+      ...dynamicFieldValues,
+    };
+    let s = activeTemplate.subjectTemplate;
+    let b = activeTemplate.bodyMarkdownTemplate;
+    for (const [k, v] of Object.entries(vars)) {
+      const reg = new RegExp(`\\{${k}\\}`, "g");
+      s = s.replace(reg, v ?? "");
+      b = b.replace(reg, v ?? "");
     }
+    subject = s;
+    formalLetterContent = b;
   }
 
   const determinedPriority = priority || category.defaultPriority || "HIGH";
@@ -131,7 +138,7 @@ export const submitGrievance = asyncHandler(async (req, res) => {
     ticketNumber,
     schoolId: school.id,
     categoryId: category.id,
-    templateId: templateId || null,
+    templateId: activeTemplate?.id || null,
     createdByUserId: req.user.id,
     assignedAuthorityId: assignedAuthority?.id || null,
     currentEscalationLevel: 1,

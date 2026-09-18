@@ -24,6 +24,11 @@ export default function CitizenDashboard() {
   // Social Share modal
   const [shareGrievance, setShareGrievance] = useState<Grievance | null>(null);
   const [sharePlatform, setSharePlatform] = useState<"TWITTER_X" | "WHATSAPP" | "FACEBOOK">("TWITTER_X");
+  const [socialPost, setSocialPost] = useState<{
+    postText: string;
+    shareUrl: string;
+    taggedHandles: string[];
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Join SMC modal
@@ -81,7 +86,28 @@ export default function CitizenDashboard() {
     }, 2000);
   };
 
-  const socialPost = shareGrievance ? apiGenerateSocialPost(shareGrievance, sharePlatform) : null;
+  useEffect(() => {
+    if (shareGrievance) {
+      apiGenerateSocialPost(shareGrievance.id, sharePlatform)
+        .then((res) => {
+          setSocialPost({
+            postText: res.postText,
+            shareUrl: res.shareUrl,
+            taggedHandles: res.taggedHandles || [],
+          });
+        })
+        .catch(() => {
+          const fallbackText = `🚨 URGENT: Grievance #${shareGrievance.ticketNumber} at ${shareGrievance.school?.name || "Govt School"} is unresolved! @EduMinOfIndia @PMOIndia #Samarthya #RTEAct`;
+          setSocialPost({
+            postText: fallbackText,
+            shareUrl: `https://twitter.com/intent/tweet?text=${encodeURIComponent(fallbackText)}`,
+            taggedHandles: ["@EduMinOfIndia", "@PMOIndia"],
+          });
+        });
+    } else {
+      setSocialPost(null);
+    }
+  }, [shareGrievance, sharePlatform]);
 
   if (isLoading) {
     return (
@@ -428,25 +454,33 @@ export default function CitizenDashboard() {
               </button>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-xs text-gray-800 whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 font-mono">
-              {socialPost.postText}
-            </div>
+            {socialPost ? (
+              <>
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-3.5 text-xs text-gray-800 whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 font-mono">
+                  {socialPost.postText}
+                </div>
 
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">
-                Tagged Handles: {socialPost.taggedHandles.join(" ")}
-              </span>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(socialPost.postText);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                className="text-xs text-brand-600 font-semibold hover:underline"
-              >
-                {copied ? "Copied!" : "Copy Text"}
-              </button>
-            </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-[11px] text-gray-400">
+                    Tagged Handles: {socialPost.taggedHandles.join(" ")}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(socialPost.postText);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="text-xs text-brand-600 font-semibold hover:underline"
+                  >
+                    {copied ? "Copied!" : "Copy Text"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="py-6 text-center text-xs text-gray-500">
+                Generating advocacy post from backend...
+              </div>
+            )}
 
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -456,10 +490,12 @@ export default function CitizenDashboard() {
                 Close
               </button>
               <a
-                href={socialPost.shareUrl}
+                href={socialPost?.shareUrl || "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-xl bg-brand-500 px-5 py-2 text-xs font-bold text-white hover:bg-brand-600 shadow-xs inline-flex items-center gap-1.5"
+                className={`rounded-xl bg-brand-500 px-5 py-2 text-xs font-bold text-white hover:bg-brand-600 shadow-xs inline-flex items-center gap-1.5 ${
+                  !socialPost ? "pointer-events-none opacity-50" : ""
+                }`}
               >
                 <span>🚀 Share Live Now</span>
               </a>
